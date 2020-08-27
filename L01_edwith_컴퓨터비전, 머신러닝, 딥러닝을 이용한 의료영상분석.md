@@ -86,29 +86,61 @@ Medical Image Analysis는 주로 3D 영상이며, Computer Vision (2D 등)과 Ma
 
 #### 5. Image acquisition (12:12)
 
+* 취득 장비
+  * Endoscopy, Microscopy
+  * X-ray
+  * Computed Tomography (CT), Positron Emission Tomography (PET), Magnetic Resonance Imaging (MRI)
+  * Ultrasound 초음파, Optical Coherence Tomography (OCT)
+* 원리
+  * Light Source로부터 빛이 물체에 반사되어 CCD 또는 CMOS Sensor를 통해 촬영
+  * Wavelength에 따라 Radio-, Micro-wave, Infrared/Visible/Ultraviolet, X-ray, gamma-ray
+  * Wavelength가 짧을 수록 에너지가 크고 유해할 수 있음
+* Visible Light 예시
+  * Endoscopy (내시경) - 끝단에 LED Light와 Sensor를 부착하여 반사된 빛 촬영
+  * Microscopy (현미경) - 조직검사 등에 사용
+
 #### 6. X-ray/CT/PET (17:52)
+
+* X-ray: Tissue(0), Air(+), Bone(-)에 따라 통과하는 X-ray의 양이 달라짐
+* CT: X-ray를 여러 단면으로 찍은 후 Reconstruction을 통해 3D화, 단면이 많을 수록 더 clear하지만, 그만큼 방사선을 많이 맞아야 하므로 수를 줄이면서 clear하게 recon 하는게 연구
+* PET
+  * CT와 반대로 방사선 물질을 몸 안에 주입하고, 안에서부터 나오는 방사선(gamma-ray)을 detect
+  * 360도로 positron(양전자)가 emission되므로 detection도 360도로 이루어져야 함
+  * 방사선 물질을 포함한 포도당 대사(신진대사 - metabolic)는 주로 암세포에서 비상적으로 많이 일어나기 때문에, 해당 부위에서 밝게 나타남
+  * 단, 물질로부터 나타나는 방사선을 촬영하므로, CT와 달리 Structure를 보기는 어려움 => PET-CT, PET-MRI 를 통시에 촬영하는 장비도 나오고 있음
 
 #### 7. Magnetic Resonance Imaging (MRI) (19:08)
 
+* 강한 자기장(1.5Tesla, 3T, 7T 등)을 걸면 수소원자핵은 방향을 정렬하여 세차 운동하게 됨
+* 이때, RF(Radiofrequency) pulse를 쏘면 공명을 일으켜 z축에서 넘어진 후, RF Pulse를 끊으면 다시 일어서는 과정에서 에너지 신호를 발산하게 됨
+* x, y축의 T1-weighted image와 T2-weighted image를 통해 Tissue 별로(Fat, Muscle, ligament, brain verves 등) 서로 다른 패턴이 나타남 이를 Fourier Transform 하여 구분함 => Soft Tissue를 구분하는데 유용함
+* 방사선이 아니기 때문에 몸에 유해하지 않음, 하지만 소음이 있고 취득에 시간에 오래 걸림
+* 비교
+  * CT: 폐, 뼈를 이미징하기 쉽고, 출혈 등이 있을 때도 가능. 저렴하고 빠르다. 하지만, 방사선 노출, 혈관 조영제의 위험성
+  * MRI: 방사선 없고, Soft Tissue를 구분해서 볼 수 있다. 하지만, 비싸고 소음, 느리다.
+  * PET: 신진대사(Metabolic function)을 확인할 수 있으므로 조기 진단을 할 수 있다. 하지만, 방사선이 있을 주입해야하는 위험성, 비쌈
+
 #### 8. Quiz 1
+
+* 7/7 100점~
 
 
 
 ### Medical image classification (1)
 
-#### 1. Introduction to medical image classification
+#### 1. Introduction to medical image classification (14:00)
 
-#### 2. Linear Regression
+#### 2. Linear Regression (23:21)
 
-#### 3. Logistic Regression
+#### 3. Logistic Regression (15:03)
 
-#### 4. Neural Network
+#### 4. Neural Network (15:12)
 
-#### 5. Image Classification
+#### 5. Image Classification (4:13)
 
-#### 6. Medical image classification
+#### 6. Medical image classification (7:21)
 
-#### 7. Classification with demographic scores
+#### 7. Classification with demographic scores (15:50)
 
 #### 8. Quiz 2
 
