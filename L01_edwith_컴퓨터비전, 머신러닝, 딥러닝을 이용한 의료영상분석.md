@@ -130,19 +130,105 @@ Medical Image Analysis는 주로 3D 영상이며, Computer Vision (2D 등)과 Ma
 
 #### 1. Introduction to medical image classification (14:00)
 
+* Brain (MRI) image classification
+  * White matter, Gray matter, 외곽은 CSF matter
+  * 일반 영상과 인지 장애, 알츠하이머(AD)(GM이 작음)의 영상이 다르다. 하지만, age에 따라서도 알츠하이머처럼 GM이 줄어드는 영향도 있다.
+  * 영상을 통해 병을 구분하는 것도 중요하지만, screening도 중요하다. screening에서는 false negative를 경계해야한다.
+  * 병, 나이, 성별 등에 따라 달라질 수 있으므로 Demographic score를 함께 고려하여 classification 해야함
+* Pathology image classification
+  * 저해상도로는 세포와 핵 등의 변화를 관찰하기 어렵다. 고배율 영상으로 세포핵의 색깔이 불균일하는 등의 상태로 암세포인지를 구분할 수 있다.
+  * 저배율 영상 대비 암세포의 크기는 매우 작기 때문에, 고배율로 모두 일일히(manual로) 다 보기는 힘들다. 따라서, 이런 부분을 인공지능을 통해 자동화하는 연구
+* Challenges in Medical Image Classification
+  * Limited data: 병원끼리 데이터 공유가 쉽지 않고, 환자 정보이기 때문에 개인정보 보호 때문에 어렵다. ADNI, TCGA(병리) 등의 사이트에서 데이터를 모아서 연구 진행
+  * Large image size: 3D 등 데이터는 매우 큰데
+  * Small changes: 큰 이미지 사이즈에 비해 이상이 있는 부분은 매우 작다
+  * Demographic scores: 단순히 이미지만 아니라, 환자 정보와 상태를 고려해서 분류해야함
+* Classification 강의 Contents
+  * Conventional Methods: Logistic Regression, Neural Network, (SVM, Random Forest)
+  * Deep Learning Methods: Deep neural network, CNN(VGG, ResNet, DensNet 등)
+
 #### 2. Linear Regression (23:21)
+
+* x가 있을 때 y(continuous, not discrete)를 찾는 문제: 데이터로부터 Regressor 라는 모델을 Training 해두면, 추후 임의의 Input x에 대해 알맞는 y를 출력함
+* 표현 방법
+  * w 등의 weight parameter를 사용한다.
+  * 1차 함수, 2차 함수 등으로도 표현할 수 있다.
+  * 여러 Input feature(x1, x2, ...)에 대해서도 정의할 수 있다.
+* Cost function
+  * 현재 상태의 regression model을 평가하는 방법으로서, 수식 표현
+  * Cost를 minimize하는 형태로 Training을 수행한다.
+  * wx+b 조합에서 cost가 최소가 되는 값을 찾기 위해, cost-w,b space를 그려볼 수 있다.
+* Gradient Descent
+  * Cost function을 w에 대해 미분하여 w를 계속 수정하는 방식으로, optimal을 찾아감. 미분을 한다는 것은 해당 그래프에서 기울기를 구한다는 것이고, 단면으로 봤을 때 기울기(gradient)를 통해 최저점으로 하강(descent)한다.
+  * 각 b, w1, w2, w3 등에 대해서 GD를 모두 수행한다.
+  * b는 w0로 표현할 수 있다. 일반화를 위해 w1x1과 같이 bx0을 wx0으로 하고, x0 = 1로 고정할 수 있다.
+  * alpha는 기울기에에 따라 얼만큼씩 이동하느냐를 결정하는 "Learning Rate"
+* Activation function
+  * 결과로 나온 y에 대해서, Logistic function 등을 이용해 값에 변화를 줄 수 있다.
 
 #### 3. Logistic Regression (15:03)
 
+* y가 continuous한 무한의 값을 갖는 Linear Regression과 달리, Logistic Regression에서는 y가 0 또는 1의 값을 갖는다.
+* 계단형의 Logtistic Function으로 fitting 해야한다. $g(z) = {1 \over {1+e^{-z}}}, z = wx+b > 0$
+* Cost function
+  * Logistic은 y값이 0 또는 1이기 때문에, convex가 아니어서 미분되지 않는다.
+  * Cross Entropy를 사용해서 0과 1에 대해서 따로 계산이 되게끔 한다.
+  * 결국 미분하면 linear regression과 같은 식이 나오게 되고, 이는 즉 gradient descent가 가능하다..
+* Activation function을 통해 값을 출력하고 training 하면 model이 된다.
+
 #### 4. Neural Network (15:12)
+
+* Regression과 같지만, Layer가 2개 이상인 구조
+* weight의 갯수가 크게 늘어남
+* 최종 output에 가까운 Layer의 노드에 대해서 GD를 수행하고, 미분의 Chain rule에 의해서 앞 Layer의 weight에 대해서도 GD를 수행할 수 있게 된다.
+* Input Layer로부터 weight를 통해 Ouput을 계산하는 과정이 Forward propagation, 반대로 미분을 통해 derivative를 구하고 weight를 업데이트 하는 과정이 Backward propagation
+* Layer의 층을 많이 늘리면 Deep Neural Network: Logistic, NeuralNet보다 분류 성능이 더 좋다.
+* Activation function
+  * Sigmoid: 중간 Layer에서 sigmoid를 사용하면, 미분했을 때 0이 되는 경우가 많아서 back propagation이 잘 안되는 현상이 나옴
+  * ReLU, Leaky ReLU: 많은 부분에 대해서 미분값을 잘 나오게 하기 위한 방법
+  * tanh
 
 #### 5. Image Classification (4:13)
 
+* 각 픽셀의 값들이 x1, x2, x3... 로 연결됨
+* Input Layer (x)
+  * 100x100 영상의 경우 10,000개의 x가 들어가고, 거기에 bias term input도 x0로 추가함
+  * 일반 RGB 영상의 경우 30,000개의 feature로 늘어나게 됨
+* 이를 Logistic Regression with sigmoid를 통해 0 Dog 또는 1 Cat으로 매핑할 수 있음
+* Neural Network/ DNN의 경우 Input Layer는 똑같이 해주면 되고, 대신 Paramter 수가 급증함
+
 #### 6. Medical image classification (7:21)
+
+* 3D 의료영상의 경우는 일반 영상보다 feature 수가 너무 많아짐
+  * 100x100x100의 Voxel에 대해서 Grayscale이라 해도 Input Feature가 100만 개가 됨
+  * Parameter는 이것보다 훨씬 더 크게 증가함
+* Overfitting 문제
+  * Training해야할 Parameter 수에 비해 데이터가 적은 경우에는 Overfitting 문제가 생김
+  * 학습된 Model을 Training 데이터에 대해 돌리면 accuracy가 100% 나오지만, Test 데이터에 대해 돌리면 확 떨어진다.
+  * 의료 영상의 외곽 영역 검은 부분은 Classification에 거의 영향을 주지 않는 의미없는 부분이므로, 이를 제거하여 Feature를 줄일 수 있다.
+* Feature Extraction (Preprocessing for Brain)
+  * FSL, Freesurfer 등의 SW를 이용해서, 의료영상으로부터 Feature를 추출할 수 있음
+  * 외곽을 제거하고, 뇌 영역별로 (white, gray, 등) Segmentation을 수행한다.
+  * 이를 통해 얻어진 Volume, Thickness, Intensity 등으로 얻어진 값들을 사용함으로써 400~500여 개로 Input Feature 확 줄일 수 있다.
+* Feature Extraction (Preprocessing for Cells)
+  * Q-pass 등을 통해 세포 수, 세포 크기, 모양 등을 추출하여 Input Feature로 사용하므로써, Pixel값을 그대로 사용하지 않으므로서 Parameter 수를 크게 줄일 수 있음
 
 #### 7. Classification with demographic scores (15:50)
 
+* Brain의 경우 Age, Gender, Feature1(volume 등), Featrue2, Feature3, ...
+  * Normal subject에 대해서, "Age, Gender => Feature1, Feature2, Feature3"으로 Linear Regression
+  * 모델 생성 후, 실제 y(feature)값과 비교하여 residual(error?)을 구해서 그 값으로 모델을 Training하는게 일반적. 하지만 요즘은 Feature Extraction이나 Linear Regression 보상없이, Image+Demographic Score를 DNN으로 바로 Classification 하기도 한다.
+  * Residual로 Model에 보상하는 과정이 Feature Normalization
+* Overall Procedure
+  * Training
+    Images 획득, Demographic Research => Feature Extraction => Feature, D.Score => Linear Regression => Residuals, Labels => Classifier (Logistic Regression, NN, DNN)
+  * Testing
+    Image => Feature Extraction => Feature, DS => Linear Regression => Residual => Classifier => Label
+* DS나 Feature가 없이 Image의 Raw data를 그대로 사용하면 효율과 정확성이 낮(았)다.
+
 #### 8. Quiz 2
+
+* 7/7 100점~
 
 
 
