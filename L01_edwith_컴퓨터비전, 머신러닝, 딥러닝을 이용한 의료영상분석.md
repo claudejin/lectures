@@ -364,7 +364,6 @@ Medical Image Analysis는 주로 3D 영상이며, Computer Vision (2D 등)과 Ma
     * Validation set을 번갈아 가며 Training 수행
 
 #### 3. Overfitting / Regularization (18:05)
-* Test
 * Overfitting
   * Linear Regression에서, 1차, 2차 등 n차 함수 모델을 만들 수 있음. 단, Training에서 학습한 모델에 Test data를 넣었을 때, 올바른 값을 예측할 수 있어야 함.
   * Overfitting이 되면 Training에서는 거의 에러가 0에 가깝지만, Test에서는 매우 커지는 현상이 발생함
