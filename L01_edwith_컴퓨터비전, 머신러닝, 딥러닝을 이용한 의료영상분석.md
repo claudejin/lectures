@@ -365,17 +365,60 @@ Medical Image Analysis는 주로 3D 영상이며, Computer Vision (2D 등)과 Ma
 
 #### 3. Overfitting / Regularization (18:05)
 
-* 
+* Overfitting
+  * Linear Regression에서, 1차, 2차 등 n차 함수 모델을 만들 수 있음. 단, Training에서 학습한 모델에 Test data를 넣었을 때, 올바른 값을 예측할 수 있어야 함.
+  * Overfitting이 되면 Training에서는 거의 에러가 0에 가깝지만, Test에서는 매우 커지는 현상이 발생함
+  * Training에러도 큰 경우에는 Underfitting이라고 함
+* Regularization
+  * Linear regression에서 정의한 Cost function을 통해 Minimization이 이뤄져야 함
+  * Weight의 L2-norm(제곱의 합) 등을 cost function에 포함해주고 함께 minimization하게 되면, weight가 무작정 커질 수는 없으므로 decision plane이 조금 단순/smooth 해진다.
+  * 비슷하게 Logistic regression이나 NN에서도 가능함
+* 순서
+  * 일단 단순한 모델부터 시작해서 점점 복잡하게 만들어 가면서, Training 데이터에서의 underfitting(High bias)을 해소
+  * 그후 Test 데이터를 확인하면서, Overfitting(high variance)에 의한 Test 데이터의 에러를 줄이기 위해 Regularization이나 data의 양을 늘려가면서 다시 overfitting을 해소
+  * 반복 => Bias와 Variance가 모두 낮은 모델을 찾으면 Classifier로 이용
 
 #### 4. Transfer Learning (4:44)
 
+* DNN에서 데이터가 적을 때 보완할 수 있는 방법
+* 의료영상이나 Normal image나 Low level feature(엣지, 직선, 텍스쳐 등)는 비슷하게 나타날 것이라는 가정(기대)아래, normal image로 먼저 학습을 한 후, 의료영상으로 transfer 함
+* Normal image로 학습 완료 후 Low, Middle level feature까지는 fix시킨 후, 의료영상 데이터로 High level feature만 학습시킴. 데이터의 양에 따라, 어느 level까지 고정시킬지 판단
+
 #### 5. Data Augmentation (2:48)
+
+* 학습 데이터 양이 적을 때 보강해주기 위한 방법 - Training set, Validation set, Test set 중, Training/Val에만 augmentation 적용
+* Mirroring: 좌우, 상하 반전
+* Rotation
+* Shearing: 약간 기울이기
+* Local Warping: 영상의 일부분만 변화를 주도록 함
+* Intensity change: 밝게 또는 어둡게 바꾸어서 학습
 
 #### 6. Evaluation of classification model (20:46)
 
+* Confusion Matrix
+  * True Negative(TN), True Positive(TP) / False Negative(FN), False Positive(FP)
+  * Sensitivity: True positive rate, recall = TP/(TP+FN)
+  * Positive Predictive value: PPV, Precision = TP/(TP+FP)
+  * Specificity: True negative rate = TN/(TN+FP)
+  * Accuracy: (TP+TN) / (TP+TN+FP+FN)
+* Screening: Normal->Cancer(FP)는 괜찮지만, Cancer->Normal(FN) 은 안됨. Recall이 중요함
+* ROC Curve(Receiver Operating Characteristics Curve): x=(1-TNR), y=(TPR)
+* AUC(Area Under a ROC Curve)
+* F1 score: Harmonic mean of recall and precision (조화평균) Positive와 Negative에 대해 동시에 평가하기 위한 값. 어느 한쪽이 많이 낮으면 낮은 쪽으로 평균지점이 내려감
+
 #### 7. Evaluation of classification model (Multi-label) (9:44)
 
+* Mutli-label의 Confusion Matrix
+  * 의료분석에서는 상태의 Grading 문제 등이 Multi-label에 해당함
+  * 각 Label을 기준으로, A이냐 아니냐로 구분하여 A에 대한 precision, recall을 구함
+  * 각 Label의 precision, recall을 평균하여 mean precision, mean recall을 통해 F1 score를 구함
+* Inbalanced data
+  * 한 class의 데이터가 유난히 많아서 inbalanced 한 경우에는, Accuracy값이 왜곡될 수 있다.
+  * 특히 이럴 경우에 F1 score가 도움이 된다.
+
 #### 8. Quiz 4
+
+* 7/7 100점~
 
 
 
