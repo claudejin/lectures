@@ -421,13 +421,93 @@ Medical Image Analysis는 주로 3D 영상이며, Computer Vision (2D 등)과 Ma
 
 
 
-
-
 ## Week 3 (Chapter 5 & 6)
 
 ### Medical image classification (4)
 
+#### 1. Feature selection using L1 regularization (18:17)
+
+* 결과가 왜 나왔는지 알려줄 수 있어야 함
+  * 여러 특징들 중 분류를 하는데 중요한 역할을 하는 특징들을 선택
+  * 결정에 중요한 역할을 한 부위를 추출해서 보여줄 수 있는 기법
+* Regularization
+  * L2-norm이 아닌 L1-norm을 사용하면 일부 weight를 0으로 만들어 준다.
+  * sgn(w) = w>0 일 때 1, w<0일 때 -1, w=0일 때 0을 이용해서, 미분했을 때 0에 가까워지도록 유도함
+  * L0-norm도 있지만 수식으로 표현되지 않기 때문에 사용할 수 없다.
+* Feature Selection
+  * Regularization term이 추가된 Cost function을 이용해 Back propagation한다.
+  * 특정 feature의 weight가 0이되고 나면, 남은 feature들이 선택 됐다고 볼 수 있음
+
+#### 2. Feature selection using Entropy / Mutual information (18:25)
+
+* Entropy
+  * 연관성이 높은 어떤 두 벡터를 찾을 수 있으면, Label 분류시 유용한 Feature를 찾을 수 있다는 말이다.
+  * Amount of information = -log{p(x)}: 항상 일어나는 일은 뻔하고 정보가 적다. 확률이 낮은 희귀한 일일 수록 정보량이 높다.
+  * Entropy = H(x) = -sigma_x{p(x)*log(p(x))}: 정보량의 기댓값 = 각 정보x가 발생할 확률을 곱한 값
+  * Joint entropy = H(X, Y): 두 사건이 같이 일어날 확률. 서로 독립 사건일 경우 H(X, Y) = H(X) + H(Y)이지만, 완전히 독립이 아니면 조건부확률을 사용해 계산됨
+  * Mutual information: X, Y를 따로 보았을 때보다 같이 보았을 때 얼마나 불확실성이 감소하는가, 즉 의존도가 높고 관련성이 높은가를 나타내는 지표
+* Decision Tree
+  * 기존 set을 두 그룹으로 나눴을 때, Entropy(불확실성)이 가장 낮아지도록 하는 feature 기준을 선택하는 방법
+* mRMR Feature Selection
+  * Minimum-redundancy-maximum-relevance
+  * D: Class와 비슷한 Feature가 선택 됐다면, R: 그 Feature와 비슷하지 않은 Feature를 선택하도록 함
+
+#### 3. Feature extraction using Deep Learning (14:08)
+
+* Feature Extraction
+  * Feature Selection은 Feature 목록에서 중요한 것을 선택하는 것이지만, Feature Extraction은 Feature로부터 조합하여 새로운 중요한 Feature를 만들어 내는 것
+  * Filter 등을 이용해서 Shape이나 Haar feature를 추출할 수 있다.
+  * Convolution을 통해 새로운 Filter feature를 추출해 feature 수를 줄일 수 있음
+  * Dimensionality Reduction: 특별히 Label이 정해져 있는 건 아니고 Unsupervised 방식으로 영상의 특징점을 구분하기 위한 방법 (e.g., PCA, AutoEncoder, ...)
+* Auto-Encoder
+  * Input과 OutputLayer를 같은 값으로 하고, Input보다 더 적은 수의 node를 가지는 Hidden Layer를 학습시키면, Input의 값을 함축한 Feature를 추출하는 것과 같다.
+  * Stacked auto-encoder 구조를 통해, 한 번에 너무 작은 node로 줄여서 발생하는 정보 손실을 방지할 수 있다.
+  * Noise를 추가해서 학습시킴으로써 노이즈에 robust하게 만들 수도 있다.
+
+#### 4. Class Activation Map (12:27)
+
+* Deep Learning이 좋은 성능을 내지만, Black box 같은 특성으로 왜 그런 결과가 나왔는지 설명해주진 못한다.
+  * 최종 Feature Map에서 마지막에 Fully Connected Layer를 거치면서, 공간적인 정보가 사라지기 때문
+  * 의료에서는 왜 그런 결과가 나왔는지를 아는 것이 중요하다. 이를 위한 기법으로 Class Activation Map
+* Global Average Pooling: 각 Feature Map의 전체 픽셀 값을 더해서 평균한 값을 Fully Connected Node에 weight를 곱해서 최종 판단을 하게 된다. 이때, 이 Weight가 사실상 Feature Map의 각 픽셀에 곱해지는 것과 같으므로, Feature 이미지에 weight를 곱해 더해줌으로써 최종 판단 전 이미지에서 큰 weight를 갖는 부분을 확인할 수 있다.
+
+#### 5. Weakly supervised learning (03:41)
+
+* 영상 단위의 Class만 가지고 있고, 이상 부분은 Rounding Box나 Segmentation 등으로 표현할 수 있다.
+* Image Label 으로 Training 후, Image Label 추론하는 건 Supervised learning이지만, Bounding Box나 Pixel Label을 추론하는건 Weakly supervised learning으로 조금 더 어려운 문제에 속한다.
+* 마찬가지로, Bounding Box로 Training 한 후, Bounding Box를 추론하는 건 supervised learning이지만, Pixel Label을 추론하는 건 Weakly supervised learning이다.
+* 의료영상의 Labeling은 시간이 오래걸리고, labeling을 할 수 있는 전문가의 수가 적기 때문에 이런 Weakly supervised learning 기법을 사용할 수 있다.
+
+#### 6. Multiple instance learning (9:56)
+
+* 특정 데이터가 아닌, 여러 데이터의 set이 Positive거나 Negative임을 알 때
+  Positive training sample, Negative training sample
+* Pathology 영상의 경우 전체 영상 크기에 비해 병변의 크기는 매우 작다.
+  * 따라서, 작은 패치로 나눠서 작은 패치를 분류할 수 있는 Classifier를 만들고, 그 결과로 전체 영상의 분류를 하겠다는게 Multiple instance learning의 아이디어
+  * 각 패치가 Instance이다.
+  * Instance Classifier가 잘 작동한다면, 영상에서 어떤 위치에 병변이 있는지도 알 수 있기 때문에 Weakly supervised learning의 한 예시가 된다.
+
+#### 7. Quiz 5
+
+* 7/7 100점~
+
+
+
 ### Medical image segmentation (1)
+
+#### 1. Introduction to medical image segmentation (6:24)
+
+#### 2. Otsu thresholding (9:11)
+
+#### 3. Morphological processing (11:28)
+
+#### 4. Reigion growing / Watershed algorithm (8:52)
+
+#### 5. Segmentation using graph model (17:56)
+
+#### 6. Graph cut optimization (17:00)
+
+#### 7. Quiz 6
 
 
 
