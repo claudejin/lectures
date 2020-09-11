@@ -497,17 +497,74 @@ Medical Image Analysis는 주로 3D 영상이며, Computer Vision (2D 등)과 Ma
 
 #### 1. Introduction to medical image segmentation (6:24)
 
+* Segmentation: 영상을 분할해주는 기법
+  * 시간차를 두고 찍은 CT (longitudinal study)를 비교할 때 부위별 크기 비교
+  * 구별하고 진단하는데 근거가 됨
+* Conventional methods
+  * 밝기값 기준: Thresholding, Region growing
+  * 영상 정보+Prior 정보: Graph cut, Active contour model
+  * Learning 기반: Active shape model
+* Deep Learning methods
+  * FCN
+  * U-Net
+  * DeepLab
+
 #### 2. Otsu thresholding (9:11)
+
+* (Threshold: 문턱값) 기준으로 크거나 작은 위치를 추출하는 방법
+  * Voxel의 값으로 1 or 0으로 Labeling
+  * Threshold를 몇으로 정하느냐가 중요한데, 보통은 Manual로 정하게 됨
+  * Otsu Thresholding은 Threshold를 자동으로 지정해주는 알고리즘
+* Otsu Thresholding
+  * Weight를 주고, Variance를 기준으로 Background(0)와 Foreground(1)를 구분함
+  * Within-class Variance = V_w = W_b * V_b + W_f * V_f
+  * Between-class Variance = V_b = W_b * W_f * (E(b) - E(f))^2 가 최대가 되는 지점을 구함
+    * ==수식 유도 복습 필요==
 
 #### 3. Morphological processing (11:28)
 
-#### 4. Reigion growing / Watershed algorithm (8:52)
+* Thresholding 등으로 생긴 노이즈를 보정할 수 있음
+* Convolution과 비슷한 Morphological processing
+  * Dilation(팽창): 1, 0으로 둔 Matrix(Structural element)에서 foreground와 겹치는 부분이 있다면 모든 1 위치를 다 foreground로 채워주는 것
+  * Erosion(침식): Dilation과 마찬가지이나, background와 겹치는 부분이 있다면 모든 1 위치를 다 background로 채워주는 것
+  * Opening: Erosion->Dilation = 원본의 shape은 유지하면서 background의 노이즈를 제거하는 과정
+  * Closing: Dilation->Erosion = 원본의 shape를 유지하면서 foreground의 hole을 채우는 과정
+  * Opening->Closing(E->D->D->E)을 해서 영상을 다듬을 수 있음
+
+#### 4. Region growing / Watershed algorithm (8:52)
+
+* Region growing
+  * 사용자 입력을 받아 영역을 생성하는 방법
+  * Mask이미지에서 선택된 점을 기준으로 주위의 255 지점을 포함시킴, 또 다시 새로 추가된 점으로부터 주위의 255 지점을 포함시키는 과정을 반복
+  * Color 영상 등에서 growing을 할 때는 정확히 같은 값이 없으므로, 기준값과 intensity 차이가 일정 threshold 이하일 경우 growing에 포함하는 방법 사용
+* Watershed algorithm
+  * Line profile grpah에서 굴곡에 물을 채우듯이, 봉우리를 기준으로 서로 다른 영역을 설정하는 방법
+  * Marker를 설정해서, 영역을 분리할지 합칠지 결정할 수 있음
 
 #### 5. Segmentation using graph model (17:56)
 
+* Observation = 영상의 컬러값 (z1, z2, ..., z9)
+* Label = 관찰된 값(Observation)으로부터 구분한 값 (x1~x9)
+* Graph Model: Observation (z1~9)로부터 x1~9의 값을 구하는 것
+  * Posterior probability: P(x1, x2, .., x9 | z1, z2, ..., z9) = P(z1, z2, ..., z9 | x1, ..., x9) * P(x1, ..., x9) / P(z1, ..., z9) by Bayes rule
+  * Posterior ~ Likelihood prob * Prior prob
+  * with Naive assumption: 각 샘플(x1, .., x9)는 독립적이다 => P(z1 | x1) * P(z2 | x2) * ...
+    * Likelihood prob = 유사도만 보게 되면, 각 pixel의 값을 보는 거게 때문에 Region growing과 크게 달라지지 않음
+    * Prior prob를 지정해줌으로써, 다양한 조합에 대해서 확률이 계산될 수 있도록 함 => 확률 최대화
+    * 모든 Pixel을 고려할 수는 없기 때문에, Markov Random field를 통해 Label끼리의 연결성을 고려해서 주위의 확률에 의존해 계산하도록 함
+
 #### 6. Graph cut optimization (17:00)
 
+* 노드의 숫자가 많아지게 되면, 예를 들어 100x100 영상의 경우 1만개의 확률이 곱해지면 사실상 0에 가까워지게 됨 => 로그를 이용해서 -log 값의 합을 취하고, Markov Random Field에 의해 주위의 연결된 노드들에 대해서만 계산함
+* E(nergy) = -log를 취해 부호가 반대가 되기 때문에, minimization하면 됨. Likelihood와 prior term의 값이 모두 줄어들게 만든는 x(label)값을 찾아야 함
+* 3x3 kernel의 경우 2^9 = 512개의 경우의 수 중에서, E가 최소가 되는 조합을 구하는 방법
+* Optimization
+  * Max flow / Min-cut
+  * Sampling
+
 #### 7. Quiz 6
+
+* 5/7
 
 
 
