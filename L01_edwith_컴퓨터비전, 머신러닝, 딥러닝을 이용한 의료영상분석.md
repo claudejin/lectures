@@ -572,7 +572,94 @@ Medical Image Analysis는 주로 3D 영상이며, Computer Vision (2D 등)과 Ma
 
 ### Medical image segmentation (2)
 
+#### 1. Active Contour Model (15:03)
+
+* 관심 영역에 바운더리를 그려주고 iteration을 진행하면서 경계를 정교화하는 과정으로 진행
+* External Energy
+  * E_edge = -|delta(Intensity)|^2 = 경계가 뚜렷한 곳, Gradient가 큰 곳, 즉 값의 차이가 큰 곳에 바운더리가 생길 것이다
+  * E_line = Intensity itself => 배경이 흰색(255)이고 선이 검정(0)일 때, 혹은 반대인 경우엔 -Intensity로 정의하면 된다
+* Internal Energy
+  * Shape의 특성을 식에 반영하는 Term
+  * E_elastic = Shape의 vertex 관계를 1차 미분하여, 전체적인 복잡한 형태를 smooth하게 만들어주는 term
+  * E_bending = Shape의 vertex를 2차 미분하여, 뾰족한 형태를 뭉툭하게 만들어주는 term
+* 전체 Energy_snake
+  * External Energy + Internal Energy (+ User input energy)
+  * Energy_snake를 최소화하는 v(s) => 즉 점들의 형태를 구하는 것
+  * 사전에 알고 있는 형태 정보를 이용해서 구한다는 점에서 prior를 이용하는 것과 비슷함
+
+#### 2. Atlas based method / Label fusion (12:53)
+
+* 사용자 Input이 없이 자동으로 Segmentation하는 기법 => 기존에 생성해둔 영상과 Mask label을 이용(학습시켜서 모델을 만드는 것은 아님)
+* Segmentation Map = Atlas
+* 원본 이미지(Y1) -> Segmentation Map(X)로 바꿔주는(registration 시켜주는) Transformation Matrix를 찾는다.
+* N개의 영상에 대해서, Transformation Matrix를 구한 후, 새로 들어오는 영상에 대해서 각각의 Transformation Matrix를 적용해서, 어떤 픽셀에 대해 Majority Voting을 하거나 새 영상과 기존 영상의 Similarity를 구한 후, 높은 Similarity의 T.M에 대해 weight를 더 높여 주는 식으로 적용.
+* Non-rigid registration: Transformation Matrix 하나로 정합하는 것이 아니라, 더 복잡한 방식 사용
+* Patch-based Label fusion: Non-rigid가 아닌 Affine registration을 수행하되, 전체 영상이 아니라, 윈도우를 잡아서 이동하면서 Simillarity가 높은 registrator를 사용함. 
+
+#### 3. Segmentation via laearning based method (3:28)
+
+* Image, Label pair를 모아놓은 Training Data로 학습을 함
+* Segmentation Model의 방식들
+  * Input Image로부터 Label을 직접 도출
+  * 각 픽셀에 대해 prediction을 하고, 이를 모아서 Label 도출
+  * Shape을 업데이트하고, 모델을 통해 더 나은 Shape로 업데이트하고, 이를 통해 Label 도출
+
+#### 4. Principle Component Analysis (PCA) (14:42)
+
+* Active shape model의 배경지식 : PCA
+* Dimensionality Reduction
+  * 어떤 축으로 데이터를 투영(projection)했을 때, 분포의 분산이 최대가 되게끔 해준다.
+  * Lagrange Multiplier Method를 사용해서 편미분하여, 고유벡터와 고유값 구하기
+  * Source 차원 갯수에 맞춰서 pair가 나옴. 그 중에서 축소하고자 하는 갯수만큼 pair를 선택 (큰 값부터)
+* PCA Implementation
+  * N개의 Training set에 대해서, Preprocessing 수행 (feature scaling, mena normalization 등)
+  * Covariance matrix 계산
+  * Singular value decomposition을 통해 Convariance Matrix에 대한 eigenvectors = U를 계산
+  * 선택한 차원의 Eigenvector를 이용해서, Projection
+
+#### 5. Active shape model (22:41)
+
+* Training 데이터에 대해서, 각 점이 이동할 수 있는 범위를 학습해 놓겠다는 모델
+* Active contour model로 가장 경계일 것 같은 곳으로 점을 이동시킴 => 잘못된 경계인 Local minimum으로 점을 이동시키면, 모양이 이상해질 수 있음 => 학습된 Active shape 범위 내에서 점이 이동하도록 범위를 제한해줄 수 있음
+* Model construction
+  * Data normalization = Shape alignment
+  * 한 영상에 대해서, PCA 데이터는 2차원 (x, y)인 점이 10개일 때, 20차원의 데이터로 표현(representation)
+  * 각 차원의 평균 => Mean shape(statistical shape model)로 표현
+* Active Shape Model 테스트
+  * Mean shape을 테스트하고자 하는 영상에서 위치를 조정해서 옮김
+  * 학습 모델을 바탕으로 b를 구하고, 그 b를 가지고 다시 복원시킴으로써 모양을 유지한 채 Shape 변화를 시킴. Active contour model에서는 Energy를 이용해 모양을 유지하고자 했지만, Active shape model에서는 eigenvalue를 가지고 모양을 유지시킴
+  * 학습시키기 위해 매칭점을 잡아줘야 한다는게 어려운 작업이지만, 학습을 하고 나면 굉장히 잘 동작한다.
+
+#### 6. Segmentation using classifier (13:35)
+
+* 단순히 Scribble에 의존해서 만든 모델보다, Classification의 트레이닝 데이터(Fore/Background 전체가 분류되어 있는 데이터)를 가지고 모델을 만들면, 좀더 정교하게 Segmentation 할 수 있다.
+* Haar-like feature: 아래-위의 차를 구하는 Filter, 좌-우의 차를 구라는 필터 등등 여러 형태의 필터를 사용해, (Convolution 하듯이) 얻어진 Response를 모아서 Feature로 이용함
+* Feature selection을 통해 선택하고, Logitstic regression 등을 이용해 각 픽셀에 대해 Fore/Background를 분류해서 얻을 수 있음
+* Markov Random Field를 통해 조금 더 Smooth하게 결과를 만들 수 있음
+
+#### 7. Quiz 7
+
+* 7/7 100점~
+
+
+
 ### Medical image segmentation (3)
+
+#### 1. Fully Convolution Network (FCN) (18:09)
+
+#### 2. U-net (17:10)
+
+#### 3. Dilated Convolution (10:03)
+
+#### 4. DeepLab V3+ (10:06)
+
+#### 5. Segmentation using 3D CNN (8:07)
+
+#### 6. Loss Function (10:00)
+
+#### 7. Segmentation Metric (08:36)
+
+#### 8. Quiz 8
 
 
 
