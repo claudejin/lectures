@@ -659,6 +659,21 @@ Medical Image Analysis는 주로 3D 영상이며, Computer Vision (2D 등)과 Ma
   * End to End로 Segmentation 결과를 얻을 수 있음.
   
 #### 2. U-net (17:10)
+* Upsampling 영상을 크게 만들어줌
+   * Nearest neighborhood : 가장 가까운 점의 값을 가져옴.
+   * Linear interporation : 양쪽 점의 값을 이용함.
+   * Unpooling : Pooling 시 값의 위치를 저장하고 Upsampling 시 위치 복원.
+
+* 학습을 통해 upsampling    
+   * Transposed convolution
+      * 기존의 Convolution 연산을 거치면 Input 보다 Output feature map 이 작아짐. ex) 4x4 -> 2x2
+      * Transposed Convolution 연산을 거치면 Input 보다 Output feature map이 커짐. ex) 2x2 -> 4x4
+      * C^T x (4x1) = C^T x C X (16 x 1) 
+   * U-Net
+     * Up convolution 을 사용한 방식
+     * Convolution 연산을 통해 작아진 Feature map으로 부터 Trasposed convolution을 사용해서 사이즈를 늘려줌. 
+     * 늘려줄때 이전의 Feature map을 concat하여 upsample을 수행. 
+  
 
 #### 3. Dilated Convolution (10:03)
 
