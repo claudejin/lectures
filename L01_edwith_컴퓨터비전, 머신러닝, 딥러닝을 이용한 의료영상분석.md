@@ -647,6 +647,17 @@ Medical Image Analysis는 주로 3D 영상이며, Computer Vision (2D 등)과 Ma
 
 #### 1. Fully Convolution Network (FCN) (18:09)
 
+* Deep Learning 기반 Segmentation 
+  * 줄어든 Feature들로부터 다시 원본영상 크기의 Segmentation 결과를 Prediction 해야함
+  
+* Fully Convolution Network(FCN)
+  * 기존의 CNN을 이용한 Segmentation은 Classifier 처럼 동작하여 픽셀단위의 라벨링이 가능했는데 Input 영상크기의 Label을 만들기 위해서 FCN이 제안됨.
+  * FCN은 CNN의 마지막 부분의 Fully connected Layer를 사용하지 않고 Convolution Layer로 대체.  
+  * 마지막 Output이 Input의 각 영역을 나타냄. Convolution을 한번만 수행하여도 각 Input 영역의 Prediction을 바로 확인가능함.
+  * upsampling을 통해 Prediction의 결과인 Segmentaion map을 만듦. 해당 맵을 Labeling 된 데이터와 비교하여 Back propagation을 수행.
+  * skip connection을 통해 Segmentation map을 detail을 향상시킬 수 있음. 
+  * End to End로 Segmentation 결과를 얻을 수 있음.
+  
 #### 2. U-net (17:10)
 
 #### 3. Dilated Convolution (10:03)
