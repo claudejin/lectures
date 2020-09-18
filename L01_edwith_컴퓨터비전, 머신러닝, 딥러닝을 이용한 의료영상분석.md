@@ -359,7 +359,7 @@ Medical Image Analysis는 주로 3D 영상이며, Computer Vision (2D 등)과 Ma
   * Model을 Training 데이터에 최적화 되기 때문에 Test 데이터에서 잘 동작할지 모름
   * Training 데이터를 Validation set으로 나눠서, Training 데이터로 학습하고 Validation set으로 검증한다.
     * 학습 초기 training error와 validation error가 함께 감소하다가, validation error가 증가하는 시점이 생기는데, 이때부터 overfitting이 발생한다고 봄
-  * Cross Validation
+  * Cross Validation (데이터가 적은 경우)
     * Training Data를 k개의 set으로 나눠서 k-fold cross validation
     * Validation set을 번갈아 가며 Training 수행
 
