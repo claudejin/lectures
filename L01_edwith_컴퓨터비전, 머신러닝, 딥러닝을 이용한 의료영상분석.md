@@ -651,41 +651,84 @@ Medical Image Analysis는 주로 3D 영상이며, Computer Vision (2D 등)과 Ma
   * 줄어든 Feature들로부터 다시 원본영상 크기의 Segmentation 결과를 Prediction 해야함
   
 * Fully Convolution Network(FCN)
-  * 기존의 CNN을 이용한 Segmentation은 Classifier 처럼 동작하여 픽셀단위의 라벨링이 가능했는데 Input 영상크기의 Label을 만들기 위해서 FCN이 제안됨.
-  * FCN은 CNN의 마지막 부분의 Fully connected Layer를 사용하지 않고 Convolution Layer로 대체.  
+  * 기존의 CNN을 이용한 Segmentation은 Patch 단위로 Classifier 처럼 동작하여, 영상의 모든 Patch에 대해서 Classifier처럼 판단하고 이를 종합하는 과정을 거쳐야 했음 => Patch에 대해서 반복 수행하지 않고, 한번에 End-to-end로 수행하기 위해서 FCN 사용
+  * FCN은 CNN의 마지막 부분의 Fully connected Layer를 사용하지 않고 Fully Convolution Layer로 대체
+    * Dense(FConnected) Layer에 해당하는 자리에서, 1x1 convolution layer를 활용하되 채널 수를 조절해가며 수행, 최종 output의 크기와 맞게끔 조절하며 Layer를 concat한다.
+    * 최종 Output layer의 size가 N이라면, 각 pixel의 prediction 값은 원본 영상의 1/N 크기의 Patch에 해당
+    * Stride를 조절하면 Patch간의 거리도 조절 가능
+    * Pixel 단위로 예측을 하려면 Upsampling(deconvolution)을 해야하는데, Skip connection을 이용해서, 이전 단계의 영상과 sum하는 방식으로 디테일을 높인 Segmentation 가능
   * 마지막 Output이 Input의 각 영역을 나타냄. Convolution을 한번만 수행하여도 각 Input 영역의 Prediction을 바로 확인가능함.
   * upsampling을 통해 Prediction의 결과인 Segmentaion map을 만듦. 해당 맵을 Labeling 된 데이터와 비교하여 Back propagation을 수행.
-  * skip connection을 통해 Segmentation map을 detail을 향상시킬 수 있음. 
-  * End to End로 Segmentation 결과를 얻을 수 있음.
   
 #### 2. U-net (17:10)
-* Upsampling 영상을 크게 만들어줌
+* 기존의 Upsampling 영상을 크게 만들어줌
    * Nearest neighborhood : 가장 가까운 점의 값을 가져옴.
-   * Linear interporation : 양쪽 점의 값을 이용함.
-   * Unpooling : Pooling 시 값의 위치를 저장하고 Upsampling 시 위치 복원.
-
-* 학습을 통해 upsampling    
-   * Transposed convolution
-      * 기존의 Convolution 연산을 거치면 Input 보다 Output feature map 이 작아짐. ex) 4x4 -> 2x2
-      * Transposed Convolution 연산을 거치면 Input 보다 Output feature map이 커짐. ex) 2x2 -> 4x4
-      * C^T x (4x1) = C^T x C X (16 x 1) 
-   * U-Net
-     * Up convolution 을 사용한 방식
-     * Convolution 연산을 통해 작아진 Feature map으로 부터 Trasposed convolution을 사용해서 사이즈를 늘려줌. 
-     * 늘려줄때 이전의 Feature map을 concat하여 upsample을 수행. 
-  
+   * Linear interporation : 양쪽 점의 값을 이용함.  (-> 2차원에서는 Bi-linear interpolation)
+   * Unpooling
+  * Deconvolution과 비슷한 개념
+     * Pooling이 수행될 때, 해당 값이 획득된 위치를 저장해놓고, Unpooling할 때 해당 위치로 값을 가져옴
+   
+* Transposed convolution
+   * 학습을 통해 Upsampling
+   * Input matrix를 Vector로 풀면서, Kernel도 변형
+   * Pooling 결과에 대해, 변형된 kernel의 Transpose을 곱함으로써, 원본 영상 형태로 복원하는 방법
+   * 기존의 Convolution 연산을 거치면 Input 보다 Output feature map 이 작아짐. ex) 4x4 -> 2x2
+   * Transposed Convolution 연산을 거치면 Input 보다 Output feature map이 커짐. ex) 2x2 -> 4x4
+   * C^T x (4x1) = C^T x C X (16 x 1) 
+* U-Net U-Net(MICCAI 2015)
+  * Up convolution 을 사용한 방식
+  * Convolution 연산을 통해 작아진 Feature map으로 부터 Trasposed convolution을 사용해서 사이즈를 늘려줌. 
+  * 늘려줄때 이전의 Feature map을 concat하여 upsample을 수행. 
+  * Transposed Convolution과 FCN에서처럼 Skip connection을 이용해 점진적으로 Up-sampling하는 네트워크
 
 #### 3. Dilated Convolution (10:03)
 
+* Filter의 receptive field의 사이사이에 공백을 넣어서 확장된 형태로 convolution
+* 일반 Convolution을 해서 prediction할 때, upsampling 과정에서 영역이 뭉개지는 형태가 나타나는데, Dilated(atrous) ocnvolution을 하게 되면 조금 더 clear한 prediction을 얻을 수 있다.
+* Downsampling, Upsampling 없이 바로 prediction을 하게 되면서 좀더 선명해지지만, 파라미터 수 변화는 없음
+* Atrous Spatial Pyramid Pooling: Rate를 변화시켜가며 convolution한 후 모아서 Sum-fusion
+
 #### 4. DeepLab V3+ (10:06)
+
+* Depth-wise Separable Convolution
+  * 3x3x3 => 1x1x1로 convolution하려면, 3x3x 3채널짜리 Filter를 사용학습하면 27개의 파라미터를 학습해야하지만, 3x3x1 filter와 1x1x3 필터를 사용하면 9+3 =12개의 파라미터를 학습하면서, 같은 기능을 할 수 있다.
+  * DeepLab V3를 Encoder 파트로 가져오고, Encoder-Decoder 구조로 만들어, Decorder로 upsampling 수행
+  * Encoder/Decoder, Dilated Convolution, SPP 를 통해 성능 향상
 
 #### 5. Segmentation using 3D CNN (8:07)
 
+* z축이 생기면서 Filter도 z축을 추가해주면, 파라미터 갯수가 크게 증가하지만, 구조 자체는 쉽게 적용 가능
+* 영상이 크기 때문에, Patch로 나누어서 Patch-wise segmentation을 수행하기도 함
+* 일반 영상에 비해, MRI 영상 등은 어떤 Patch더라도 밝기 패턴이 비슷하기 때문에 학습이 더 잘 되긴 함. 하지만, 전역적인 정보는 잃게 될 순 있음
+* U-Net, FCN, ... 적용 가능
+
 #### 6. Loss Function (10:00)
+
+* 픽셀 단위로 레이블이 매칭이 되는지 확인함
+* Classification과는 조금 다른 Loss function이 사용되는 경우가 많음
+  * Segmentation에서는 Cross Entropy를 사용하지 않음
+    * Gound Truth에서 object의 크기가 굉장히 작은 경우가 많음
+    * 이때 소수의 부분만을 제외하고 대부분의 영역이 비슷하기 때문에, 단순히 Similiarity(CE)를 사용하면 전체적인 영역이 비슷하기 때문에 판별하기가 어려움
+  * Weighted Cross Entropy에서는 beta값을 사용해서, Foreground나 Background에서 강조하게 됨
+    * beta > 1 : false negative 감소. 왠만하면 foreground로 인식하도록
+    * beta < 1 : false positive 감소. 왠만하면 background로 인식하도록
+    * Balanced Cross Entropy: 두 개 term을 모두 beta로 조절하는 방식
+  * Dice Loss <- Dice Coefficient
+    * Segmentation ground truth와 Prediction 에서, 교집합의 비율이 얼마냐 되는가하는 Dice coefficient 응용
+    * Background를 고려하지 않고, Foreground만 비교함
+  * Cross Entropy와 Dice loss를 결합하여 사용하기도 함
 
 #### 7. Segmentation Metric (08:36)
 
+* Pixel Accuracy: Object 크기가 작아서 전체 영상에서 1%만 다르게 되면, True Negative가 들어간 Accuracy 식은 무조건 높기 나오기 때문에 적합하지 않을 수 있음
+* Intersection over Union
+* Dice Coefficient: True Positive에 좀 더 강조된 식
+* Hausdorff distance: Noise에 취약하다
+* Average distance: max를 average로 변경해서 노이즈에 좀 더 robust하도록 만든 식
+
 #### 8. Quiz 8
+
+* 7/7 100점~
 
 
 
