@@ -232,7 +232,7 @@ Medical Image Analysis는 주로 3D 영상이며, Computer Vision (2D 등)과 Ma
 
 
 
-## Week 2 (Chapter 3 & 4)
+## Week 2 (Chapter 3 & 4) :date:Aug 31-Sep 4, 2020
 
 ### Medical image classification (2)
 
@@ -421,7 +421,7 @@ Medical Image Analysis는 주로 3D 영상이며, Computer Vision (2D 등)과 Ma
 
 
 
-## Week 3 (Chapter 5 & 6)
+## Week 3 (Chapter 5 & 6) :date:Sep 7-11, 2020
 
 ### Medical image classification (4)
 
@@ -568,7 +568,7 @@ Medical Image Analysis는 주로 3D 영상이며, Computer Vision (2D 등)과 Ma
 
 
 
-## Week 4 (Chapter 7 & 8)
+## Week 4 (Chapter 7 & 8) :date:Sep 14-18, 2020
 
 ### Medical image segmentation (2)
 
@@ -667,7 +667,7 @@ Medical Image Analysis는 주로 3D 영상이며, Computer Vision (2D 등)과 Ma
    * Unpooling
   * Deconvolution과 비슷한 개념
      * Pooling이 수행될 때, 해당 값이 획득된 위치를 저장해놓고, Unpooling할 때 해당 위치로 값을 가져옴
-   
+  
 * Transposed convolution
    * 학습을 통해 Upsampling
    * Input matrix를 Vector로 풀면서, Kernel도 변형
@@ -732,24 +732,103 @@ Medical Image Analysis는 주로 3D 영상이며, Computer Vision (2D 등)과 Ma
 
 
 
-## Week 5 (Chapter 9 & 10)
+**[Registration 먼저 진행]**
 
-### Medical image enhancement (1)
-
-### Medical image enhancement (2)
-
-
-
-## Week 6 (Chapter 11 & 12)
-
-### Medical image enhancement (3)
+## Week 5 (Chapter 12 & 13) :date:Sep 21-25, 2020
 
 ### Medical image registration (1)
 
+#### 1. Introduction to medical image registration (8:00)
+
+* Registration (정합)
+  * 두 영상 간의 매칭점을 찾고
+  * 매칭점을 바탕으로 Transformation Matrix를 예측하고
+  * 예측된 Matrix로 영상을 변환함
+* 정합의 예시
+  * Same subject, Same Type image
+    * 시간에 따른 변화 Longitudinal study
+    * 과거의 MRI와 현재의 MRI를 잘 맞춰줄 수 있으면, 변화위치를 쉽게 확인할 수 있음
+  * Same subject, Different type (MRI(T1-weighted, T2-weighted)와 PET, CT 등 영상 = 구조적 + 신진대사 정보 결합)
+  * Different subjects, Same type
+    * 여러 사람들의 동일 부위 MRI를 모아,
+    * 평균 뇌 영상을 만들거나
+    * Label 해놓은 영상을 바탕으로 다른 사람의 영상에 Label을 입히는 label fusion
+* 알고리즘
+  * Convetional: Transformation matrix, Iteravie closest point(ICP), Non-rigid ICP, Deformable models
+  * Deep Learning: FlowNet, CNN for Registration
+
+#### 2. Overview (7:23)
+
+* Moving(Source) image => Fixed(Target) image 로 변환하는 직관적인 과정을 단계로 나누어 구현
+  * 어떤 점의 위치와 다른 영상에서 그와 비슷한 점의 위치를 파악하기
+  * Source point를 target point로 변환하는 matrix를 estimation = Transformation Matrix, T
+  * Matrix를 이용해 Image transformation
+
+#### 3. Transformation Matrix in 2D (26:20)
+
+* Transformation의 단계
+  * Rigid transformation = Rotation, Translation
+  * Similarity transformation = Rotation, Translation, Scaling
+  * Affine transformation = 가로와 세로 방향의 scaling이 달라지는 경우, 평행한 상태로 기울이기 (평행사변형 등)
+  * Projective transformation (Homography) = 평행하지 않고 기울이기 (사다리꼴 등)
+* Matrix
+  * Translation: [x' y']^T^ = [x y]^T^ + [tx ty]^T^
+  * Rotation: [x' y']^T^ = [cos -sin; sin cos] [x y]^T^
+  * Scaling: [x' y']^T^ = [s 0; 0 s] [x y]^T^
+  * Shearing: [x' y']^T^ = [1 0; lamda 1] [x y]^T^
+* Pseudo Inverse
+  * Similarity transofmration ==> [x' y']^T^ = [s\*cos -s\*sin; s\*sin s\*cos] [x y]^T^ + [tx ty]^T^
+    * a = s\*cos, b = s\*sin
+    * x' = ax - by + c; y' = bx + ay + d
+    * 변수가 4개기 때문에, (x, y) 점 이동이 2개로 정방행렬을 만들면 역행렬을 구할 수는 있다. 하지만, 실제로는 더 많기 때문에 역행렬을 취할 수 없어서 Pseudo Inverse를 구하고, 근사된 역행렬로 비슷하게 transformation시킬 수 있다.
+      * A^T^A의 역행렬을 구하는 방법
+      * A의 singular value decomposition을 수행하는 방법
+  * Affine transformation ==> a, b, c, d, e, f
+    * x' = ax + by + e; y' = cx + dy + f
+* Scaling을 하기 전에 Translation을 해서 중심점을 맞춘 후, 다시 복원하는 것이 필요
+
+#### 4. Transformation Matrix in 3D (11:25)
+
+#### 5. Backward warping (6:20)
+
+#### 6. Interpolation (14:56)
+
+#### 7. Similarity measure - SSD, SAD, NCC (8:51)
+
+#### 8. Similarity measure - Mutual information (11:53)
+
+#### 9. Quiz 12
 
 
-## Week 7 (Chapter 13 & 14)
 
 ### Medical image registration (2)
 
+#### 1. Registration types (7:50)
+
+#### 2. Registration using main axis (12:32)
+
+#### 3. Iterative Closest Point (ICP) (5:42)
+
+#### 4. Nonrigid registration via ICP (14:28)
+
+#### 5. Nonrigid registration via B-spline (9:49)
+
+#### 6. Nonrigid registration via deformable model (11:16)
+
+#### 7. Quiz 13
+
+
+
+## Week 6 (Chapter 14 & 9) :date:Oct 5-9, 2020
+
 ### Medical image registration (3)
+
+### Medical image enhancement (1)
+
+
+
+## Week 7 (Chapter 10 & 11) :date:Oct 12-16, 2020
+
+### Medical image enhancement (2)
+
+### Medical image enhancement (3)
