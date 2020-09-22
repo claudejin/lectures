@@ -789,15 +789,52 @@ Medical Image Analysis는 주로 3D 영상이며, Computer Vision (2D 등)과 Ma
 
 #### 4. Transformation Matrix in 3D (11:25)
 
+* 1개 차원이 더 추가된 [x y z]^T^ -> [x' y' z']^T^ 로 변환하는 Transformation Matrix
+  * 2D와 비슷하지만, 변수의 수가 많아지므로 12개의 변수가 생기므로 최소 4개의 매칭점이 필요하다.
+  * Rotation은 각 축을 기준으로 Roation matrix를 찾고, 이를 결합하여 R matrix를 구할 수 있다.
+  * Translation -> Rotation -> Scaling -> Translation 등의 순서로 변형할 수 있음
+
 #### 5. Backward warping (6:20)
+
+* Forward warping
+  * Transformation matrix를 이용해, 원본 영상으로부터 순차적으로 변환된 좌표로 픽셀값을 넣는 방식
+  * 반올림 등에 의해서 변환된 영상에서 비는 픽셀이 생길 수 있음
+* Backward warping
+  * Transformation matrix의 역함수를 이용해, 변환될 좌표에서 원본 좌표를 추정해서 값을 가져오는 방식
+  * Interpolation 기법은 다양하게 활용 가능 (기본적으로 nearest neighbor)
 
 #### 6. Interpolation (14:56)
 
+* Nearest-neighborhood: 가장 가까운 점의 값을 사용
+* Linear: 가까운 두 점의 값의 기울기를 통해 추정하여 값 사용
+  * Bilinear Interpolation: 4개의 점을 고려 => x축 방향으로 y 2개에 해당하는 값 추정 후, y축 방향으로 그 값 사이로 추정해서 값 사용
+  * Trilinear Interpolation: 6개의 점을 고려 => x축, y축, z축 순으로 interpolation
+* Cubic: 가까운 두 점과 그 주변의 값을 모두 고려해 곡선을 추정 후 값 사용
+  * Bicubic interpolation: x^0^y^0^, x^0^y^1^, x^0^y^2^, x^0^y^3^, x^1^y^0^, x^1^y^1^, x^1^y^2^, x^1^y^3^, ...의 16개 계수를 찾아서 보간
+  * Tricubic interpolation
+
 #### 7. Similarity measure - SSD, SAD, NCC (8:51)
+
+* 기본적인 비교
+  * SSD: Sum of square distance = Intensity 차이의 제곱의 합
+  * SAD: Sum of absolute distance = Intensity 차이의 절대값의 합
+  * 정확히 같은 형태인데도, 밝기가 다른 경우에는 Similarity가 낮아지는 현상이 있음
+* NCC: Normalized Cross Correlation
+  * Correlation을 평균과 표준편차로 Normalize 해서 형태의 유사성을 판단
+  * -1 ~ 1의 유사도를 표시함
 
 #### 8. Similarity measure - Mutual information (11:53)
 
+* CT와 PET, CT와 MRI 등 서로 다른 modality의 영상에 대한 similarity 비교
+* Joint-histogram을 통해서 동시에 어둡거나, 동시에 밝은 또는 한쪽에서만 밝은 부분에 대한 histogram 생성
+  * 형태가 겹쳐진다면 동시에 밝고 동시에 어두운 부분이 많기 때문에, 값이 높은 부분이 많고 => Uncertainty가 낮고 Information이 적음
+  * 형태가 겹치지지 않으면 동일한 위치에서 밝기 수준이 다른 경우가 많아짐 => 전반적으로 갯수가 적고 => Uncertainty가 높아 Information이 많음
+* Mutual Information = H(M) + H(F) - H(M, F) = 높아질 수록 유사도가 높다.
+  * Normalized MI를 사용하기도 [H(M) + H(F)] / H(M, F)
+
 #### 9. Quiz 12
+
+* 8/8 100점~
 
 
 
