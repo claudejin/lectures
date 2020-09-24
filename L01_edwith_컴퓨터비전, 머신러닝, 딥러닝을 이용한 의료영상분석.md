@@ -842,17 +842,63 @@ Medical Image Analysis는 주로 3D 영상이며, Computer Vision (2D 등)과 Ma
 
 #### 1. Registration types (7:50)
 
+* Intensity 기반 Registration 기법
+  * E.g., NCC, Mutual Information
+  * 일정한 간격으로 Control Point를 선정하고 Patch로 나누어, Fixed image에서 유사도가 높은 지점을 찾음
+  * 모든 Control point에 대해서 Similarity를 구해야 하기 때문에, Computation이 높음
+    * Translation x Scaling x Rotation x Points => Too many
+* Feature 기반 Registration 기법
+  * Moving image와 Fixed image에서 각각 Feature를 뽑고, Feature Descripter를 비교해서 Correspondance를 찾음
+  * 특히 유사도가 높은 Correspondance에는 weight를 높여주거나, 낮으면 rejection 함
+  * Intensity 기반보다 속도가 빠름
+  * Feature e.g. : edge, corner, segmentation => outer boundary
+* Affine registration은 Feature 기반으로 하고, 정확하게 수행하기 위해 Intensity 기반으로 하는 2pass 방식도 사용할 수 있음
+
 #### 2. Registration using main axis (12:32)
+
+* PCA 등을 활용해 main axis를 찾은다음, 해당 축의 중심, 기울기를 이용해 Translation, Rotation 등을 보정
+* 2차원뿐 아니라 3차원에서도 축의 형태를 구하는게 가능함
+* => Main axis 벡터의 rotation matrix를 구하는 문제로 환원 됨
+  * 두 벡터의 내적을 이용해 각도 계산
+  * 회전 방향을 위해서는 외적을 이용해 수직하는 축을 확인
 
 #### 3. Iterative Closest Point (ICP) (5:42)
 
-#### 4. Nonrigid registration via ICP (14:28)
+* Outer boundary feature를 추출 후
+  * 중심점을 맞추는 translation matrix 구하기
+  * 각 점에서 Closest 매칭점을 연결
+  * 매칭들로 transformation (rotation) matrix를 구하고
+  * rotation 시킴
+  * [반복] 점들 사이의 거리가 일정 수준 이하로 줄어들 때까지 반복
 
-#### 5. Nonrigid registration via B-spline (9:49)
+#### 4. Non-rigid registration via ICP (14:28)
 
-#### 6. Nonrigid registration via deformable model (11:16)
+* 모든 점을 하나의 matrix로 변환하는 것이 아니라, deformation field가 다르게 적용
+  * 각 점마다의 Transformation matrix와 변환 된 결과와의 distance를 구해 기본적인 energy term(loss)를 구하고,
+  * 점 간의 거리는 가까워야 한다는 특성을 이용해 smoothing term을 정의함
+  * 어떤 랜드마크를 정해주게 되면, 해당 랜드마크와 비슷한 위치로 이동해야 한다는 landmark term도 추가
+  * term마다 alpha, beta값을 추가하여 term간의 weight 조절
+  * iteration이 증가할 수록 alpha를 줄여서 점점 형태가 맞춰지도록 함
+
+#### 5. Non-rigid registration via B-spline (9:49)
+
+* Intensity 기반의 경우, 모든 픽셀을 다 계산하기는 너무 계산량이 많기 때문에, Control point를 선정해서 구하고, 나머지는 interpolation 함
+* 주변 픽셀을 이용해 Cubic spline을 구해서 control point의 이동 위치를 정하고, 그 사이의 픽셀들은 spline의 형태를 따라 이동시킨다.
+
+#### 6. Non-rigid registration via deformable model (11:16)
+
+* Affine transformatino에 의해서, 기본적인 이동을 시킨 후
+* Control point들의 correspondance를 정해, moving image의 patch를 fixed 영상의 일정 범위 내에서 유사한 부분을 template matching으로 찾는다. (SSD, NCC, MI, ...)
+* 기본적으로 Similarity cost를 이용하지만, control point의 각 transformation matrix 간에 편차가 크지 않도록 smoothing cost term을 추가하고 lambda 가중치를 넣는다.
+* cost 미분을 통해 control point를 조정하고, cost를 다시 구하는걸 반복함으로써, 각 control point의 transformatino matrix를 구하고, B-spline을 통해 다른 point에 대해서도 matrix를 구한다.
+* 추후 input에 대해 backward warping을 통해 registrated 이미지를 구한다.
+* Multi-resolution
+  * Non-rigid 방식의 경우 계산량이 문제가 되기 때문에, 이미지의 크기를 줄여서 control point를 선정하면 transformation matrix가 rough하게 생긴다.
+  * 조금 큰 영상에서, 아래 레벨의 transformation을 수행해서 어느정도 맞춘 후, search 범위를 줄여서 계산하고, 다시 조금더 큰 연상에서 아래 레벨의 결과를 이용하는 방식으로 계산량을 줄일 수 있다.
 
 #### 7. Quiz 13
+
+* 5/7
 
 
 
