@@ -887,10 +887,10 @@ Medical Image Analysis는 주로 3D 영상이며, Computer Vision (2D 등)과 Ma
 
 #### 6. Non-rigid registration via deformable model (11:16)
 
-* Affine transformatino에 의해서, 기본적인 이동을 시킨 후
+* Affine transformation에 의해서, 기본적인 이동을 시킨 후
 * Control point들의 correspondance를 정해, moving image의 patch를 fixed 영상의 일정 범위 내에서 유사한 부분을 template matching으로 찾는다. (SSD, NCC, MI, ...)
 * 기본적으로 Similarity cost를 이용하지만, control point의 각 transformation matrix 간에 편차가 크지 않도록 smoothing cost term을 추가하고 lambda 가중치를 넣는다.
-* cost 미분을 통해 control point를 조정하고, cost를 다시 구하는걸 반복함으로써, 각 control point의 transformatino matrix를 구하고, B-spline을 통해 다른 point에 대해서도 matrix를 구한다.
+* cost 미분을 통해 control point를 조정하고, cost를 다시 구하는걸 반복함으로써, 각 control point의 transformation matrix를 구하고, B-spline을 통해 다른 point에 대해서도 matrix를 구한다.
 * 추후 input에 대해 backward warping을 통해 registrated 이미지를 구한다.
 * Multi-resolution
   * Non-rigid 방식의 경우 계산량이 문제가 되기 때문에, 이미지의 크기를 줄여서 control point를 선정하면 transformation matrix가 rough하게 생긴다.
@@ -905,6 +905,91 @@ Medical Image Analysis는 주로 3D 영상이며, Computer Vision (2D 등)과 Ma
 ## Week 6 (Chapter 14 & 9) :date:Oct 5-9, 2020
 
 ### Medical image registration (3)
+
+#### 1. Optical flow / FlowNet (16:48)
+
+* Optical flow
+  * Video에서 Frame 간의 차이를 추정하는 것. 이전 프레임의 한 점이 다음 프레임에서 어디로 이동되었는지
+  * Similarity와 Smooth에 대한 Cost를 구하며, Cost를 minimize해주는 displacement를 구함
+  * x, y의 이동 반경 u, v는 일정 수준 이하로 제한
+* FlowNet
+  * 해상도 향상을 위해 U-net 구조와 비슷한 Refinement 모듈을 가지고 있음
+  * [Impl 1] t frame와 t+1 frame 영상을 channel 축으로 concat하여 6 channel 이미지를 입력으로 사용
+  * [Impl 2] t frame과 t+1 frame을 따로 convolution한 후, 중간에 correlation layer에서 path가 합쳐지는 형태로 구현
+    * Convolution의 weight 대신, 다른 영상의 input을 사용함
+  * Loss: L2 loss (EPE, endpoint error)
+  * Displacement가 동일한 위치에 나오지 않기 때문에, 범위를 조금 넓게 지정해서 찾음
+
+#### 2. Data augmentation for optical flow (6:44)
+
+* Optical flow를 학습하기 위한 Open data
+  * Middlebury : 8
+  * KITTI : 194
+  * Sintel : 1041
+* [FlowNet] Open data가 너무 적다 -> Flicker에서 저작권 문제가 없는 영상을 활용
+  * Flicker 영상을 배경으로 사용하고, 3D Chair를 방향을 바꿔가며 object로 합성함
+  * => Flying chair 영상을 22872장을 만들어서, Affine, Rigid, Smilarity를 통해 학습함
+  * Data augmentation(Translation, Rotation, Scaling)도 추가하여 학습함
+
+#### 3. 3D image registration via CNN (12:10)
+
+* Nonrigid Image Registration Using Multi-scale 3D Convolutional Neural Networks \'17
+  * Affine registration은 되어있다고 가정
+  * 3D Moving image와 3D Fixed image에서 2개 사이즈의 patch를 추출
+    * 29x29x29 patch => Conv ... => 23x23x23 x16 => Moving & Fixed를 함께 23x23x23 x32로 concat 한 후, Convolution => conv => Max pooling => 9x9x9x30
+    * 27x27x27 patch => Conv ... => 21x... => Moving & Fixed Concat => Conv ... => Max pooling => 9x9x9x30
+    * 29-patch와 27-patch를 concat => 9x9x9x 60을 => conv => ... => x, y, z displacements 3개 값을 추정
+* Quicksilver: Fast Predictive Image Registration - a Deep Learning Approach \'17
+  * Affine registration은 되어있다고 가정
+  * 3D Moving image와 3D Fixed image에서 3D patch를 추출
+    * 15x15x15 patch from Moving => Conv ... => 8x8x8 x64 => Conv ... => 5x5x5 x128
+    * 15x15x15 patch from Fixed => Conv ... => 8x8x8 x64 => Conv ... => 5x5x5 x128
+    * Moving & Fixed concat해서 => 5x5x5 x256 => **Upconv** => Conv ... => 8x8x8 x128 => **Upconv** => Conv ... => 15x15x15x 1 출력 (x, y, z축에 대해서 별도로 나눠서 3회 진행)
+* => 메모리 문제로 3D 전체 이미지를 end-to-end로 한 번에 얻을 수는 없음
+
+#### 4. Spatial Transformer Network (21:15)
+
+* Google에서 발표한 classification 논문이지만, Ground-truth가 없이 학습하는 Unsupervised learning 기반 Registration의 기반이 됨
+* 영상의 일부를 가지고 classification이 되어야 할 때, 영역을 추출하고, 추출된 영역을 바탕으로 classification
+  * Transformation matrix의 파라미터를 찾기 위한, Localization network 사용
+  * Grid Generator를 통해 Crop할 영역을 정의함
+  * Sampler를 통해 Transform된 원본 영상에서의 좌표를 Interpolation하여 V-Feature map 생성
+  * Prediction을 통해 Back-propagation을 하려면 미분이 되어야 하는데, U, V, Grid generator, Sampler 등 부분이 모두 미분이 가능하다
+    * Round, Floor 함수를 수식으로 구현하여, maximize 하는 방식
+
+#### 5. 3D image registration via unsupervised learning (8:34)
+
+* An Unsupervised Learning Model for Deformable Medical Image Registration \'18
+  * 매칭점들을 레이블로 가지는 학습데이터가 필요 없음 => Unsupervised
+  * Moving/Fixed Image를 U-net 구조로 Conv/Upconv를 이용해 3-channel의 Registration Field 생성
+  * Registration Field를 Spatial Transformation을 통해 Moved Image를 만들고
+  * Fixed Image와 비교하여 Loss function(Similarity + Smoothness)을 계산
+
+#### 6. Registration metric (10:03)
+
+* Registration 결과의 정확성 측정 Metric
+* 직접적 방법
+  * Endpoint error (EPE)
+    * X방향/Y방향 displacement Ground truth와, prediction 간의 L2 distance를 구함
+    * 직관적이지만, 픽셀/voxel 단위 ground truth를 만드는 것이 매우 어려움
+  * Landmark/Segmentation based validation
+    * Moving/Fixed image 사이의 landmark(또는 segmentation)의 위치를 확인하고,
+    * 각 부분 간의 위치 차이를 비교
+* 간접적 방법
+  * Inverse consistency error
+    * T~MF~: Transformation matrix Moving -> Fixed
+    * T~FM~: Transformation matrix Fixed -> Moving
+    * Fixed로 변환한 후 다시 Moving으로 변환하였을 때, 원래의 점 위치로 잘 돌아오는지를 확인
+  * Intensity variance
+    * Mutual Information(Joint distribution)를 이용해, 정합된 영상들이 위치별로 밝기 차이가 적을 때 정합이 잘되었다고 판단
+* 이외
+  * 소요 시간 등
+
+#### 7. Quiz 14
+
+* 7/8~
+
+
 
 ### Medical image enhancement (1)
 
