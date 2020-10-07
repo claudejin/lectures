@@ -902,7 +902,7 @@ Medical Image Analysis는 주로 3D 영상이며, Computer Vision (2D 등)과 Ma
 
 
 
-## Week 6 (Chapter 14 & 9) :date:Oct 5-9, 2020
+## Week 6 (Chapter 14 & 9) :date:Oct 5-8, 2020
 
 ### Medical image registration (3)
 
@@ -992,6 +992,71 @@ Medical Image Analysis는 주로 3D 영상이며, Computer Vision (2D 등)과 Ma
 
 
 ### Medical image enhancement (1)
+
+#### 1. Introduction to medical image enhancement (8:10)
+
+* Image generation / Data generation for training
+  * Noise removal
+  * Super resolution
+  * Field inhomogeneity artifact (자기장에 의한 불균등 현상)
+* Conventional methods: Normalization, Histogram equalization, Filtering, Dictionary learning
+  * Filtering에서 전통적으로 Convolution을 하지만, Frequency로 변환하면 convolution 대신 곱셈을 사용할 수 있음
+  * 데이터로부터 Dictionary를 학습하고, 학습한 Dictionary를 기반으로 이미지 향상
+* Deep Learning methods: SRCNN, GAN, SRGAN
+  * SRCNN은 Dictionary learning의 성질을 반영하여 Neural net으로 제안함
+
+#### 2. Intensity normalization (6:12)
+
+* Linear Normalization
+  * 영상의 특정 최소/최댓값을 특정 범위(e.g., 0~255)의 값으로 변환하는 문제
+  * 단순 기울기를 이용하는 방법
+  * 특정 최소/최댓값의 범위를 벗어나는 값은, 특정 범위의 최소/최댓값(0, 255)으로 설정 => 각진 sigmoid 형태
+  * Gamma correction을 통해 밝기 값의 증가 방법을 바꿀 수 있음
+
+#### 3. Histogram equalization (12:16)
+
+* Histogram
+  * 밝기값이 영상에서 어떻게 분포하고 있는지를 보여줌
+  * Cumulative distribution function (누적분포함수)
+  * 누적 분포를 통해 픽셀의 어두운 값부터 순서대로 전체 특정 범위에 매칭시켜줌
+  * equalization하면 어두운 부분은 밝아지고 밝은 부분은 어두워져서, 적절해짐
+
+#### 4. Histogram Matching (6:01)
+
+* Source 영상의 Historam을, Target 영상의 Histogram으로 변화시켜 주는 작업
+* Source/Targer의 각각의 CDF를 구한 후, Source의 비슷한 CDF 값과 비슷한 값을 Target CDF에서 찾은 후 해당하는 픽셀값으로 치환
+
+#### 5. Spatial Filtering (6:48)
+
+* Histogram Equalization이나 Matching의 경우, 픽셀값을 다른 값으로 이동시켜주는 것인데,
+  Spatial Filtering은 주변의 형태를 봐서 Filtering 하기 때문에 픽셀 값 변화가 형태에 영향을 줄 수 있게 됨
+* Linear filtering: 고정된 kernel Matrix를 이용해 convolution -> smoothing or sharpening
+* Nonlinear Filtering
+  * Median filter: pepper and salt noise에 좋음
+
+#### 6. Anisotropic diffusion filtering (7:50)
+
+* Isotropic diffusion filtering
+  * 3x3 kernel에서 average와 비슷한 형태로 가운데가 높은 값
+  * 식을 재구성해서 기준 pixel의 상하좌우로의 gradient를 더해주는 방식으로 smoothing
+* Anisotropic diffusion filtering
+  * Gradient에 가중치를 곱해주는데, 이 가중치는 Gradient의 크기를 고려해서 계산에 반영함
+  * Gradient가 크면, edge로 판단되어 계산에 반영하지 않고, 값의 차가 비교적 작은 노이즈에 대해서 weighted average 수행
+
+#### 7. Vessel enhancement filtering (17:27)
+
+* Laplacian of Gaussian Filter
+  * Gaussian distribution을 2차 미분한 함수를 통해 filter 생성 후 적용
+  * Blob 추출 가능
+  * Hessian matrix로부터 eigen value를 얻어 점이 위치한 structure를 구분
+* Vessel enhancement filter (Multiscale vessel enhancement filtering \'98)
+  * R~A~와 R~B~, S를 통해 Line 또는 Vessel 형태가 갖는 특징을 파악
+  * Gaussian에서 Sigma를 조절하여, filter로 추출하는 blob의 크기를 조절
+  * Sigma 크기를 조절하여 얇은 혈관에서 두꺼운 혈관까지 변화시켜가며 추출 한 후, 영상들 간의 maximum을 구하면 다양한 두께의 혈관이 추출된 영상을 얻을 수 있음
+
+#### 8. Quiz 9
+
+* 5/7~
 
 
 
