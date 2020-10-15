@@ -1064,4 +1064,105 @@ Medical Image Analysis는 주로 3D 영상이며, Computer Vision (2D 등)과 Ma
 
 ### Medical image enhancement (2)
 
+#### 1. Filtering in frequency domain (11:02)
+
+* Frequency Domain
+  * cos(t)라는 주기를 기준으로 cos(2t) 등 다양한 주기(low -> high frequency)를 갖는  여러 파형
+  * 여러 주기의 파형의 합으로 복잡한 형태의 파형을 표현할 수 있음
+* Fourier transform을 통해 복잡한 형태의 파형을 여러 주기의 단위 파형의 합으로 분해할 수 있음
+  * 동일한 (비슷한) 주기함수를 곱해줄 수록 그 합이 커지고, 다른 주기 함수를 곱하면 작아진다
+* Filtering in Frequency Domain
+  * 큰 변화는 주기가 작은 Low Frequency 성분에서 나오고
+  * 세밀한 변화는 주기가 작은 High Frequency 성분에서 나온다
+  * 파형을 Fourier transform 한 뒤, 주기가 작은 성분을 0으로 바꾸고 다시 Inverse Fourier transform 하면 Low Frequency 성분만 남아서, 필터링된 값을 얻게 된다
+
+#### 2. Filtering in 2D frequency domain (17:30)
+
+* 2D Frequency Domain
+  * 2차원 형태의 이미지도 밝기값의 변화에 따라 2차원의 Frequency Domain을 추출할 수 있음
+  * 특정 패턴을 없애려면 Convolution으로는 매우 어렵다.
+  * 하지만, Frequency Domain에서는 그 패턴에 대한 Frequency를 0으로 바꾸고 Inverse Fourier Transform 하면 노이즈와 패턴 등을 제거할 수 있음
+* 영상의 경우 Discrete 하기 때문에, Discrete Fourier Transform을 수행한다
+  * 적분(Integral)을 합(Summation)으로 바꾸고, 길이(or 픽셀 수)로 나누어준다
+  * 복소수 형태로 값이 계산 되는데, 각 픽셀에 대한 계수를 구하는 것과 같다
+  * 결과 복소수의 크기를 구하면 Spectrum or Magnitude가 된다. Low frequency에서는 큰 값, High frequency에서는 작은 값으로 나온다
+  * 값이 코너에 주로 나오기 때문에, 영상으로 visualization 할 때는 Shift 시켜서 중앙에 Low frequency로 모아준다
+* Filtering in Frequency domain
+  * Frequency domain의 영상에서 일부분을 삭제하거나 남겨서 영상의 특징을 남길 수 있다
+  * 특정 형태를 sharp하게 0으로 바꾸면 Inverse DFT했을 때 Ringing effect가 나타날 수 있으므로, smoothing 해주면 좋다
+
+#### 3. Spatial domain vs Frequency domain (5:21)
+
+* Spatial domain: Convolution
+* Frequency domain
+  * DFT 변환 후 domain에서 곱셈 후 Inverse DFT
+  * Filter를 DFT로 변환하여 곱셈할 수도 있고, frequency domain에서 바로 수정할 수도 있음
+* Convolution에 비해 곱셈은 연산량이 훨씬 작다. 하지만 DFT, IDFT를 하는데 시간이 걸릴 수 있다
+* 의료 영상은 패턴을 가지는 error들이 종종 있기 때문에, Freq 기준으로 filtering 하는 경우가 많다
+* DFT외에도 Discrete Cosine Transform, Haar Transform, Wavelet transform 등 다양한 기법들이 있다
+
+#### 4. Non-Local Mean denoising (6:04)
+
+* Image self-similarity
+  * 영상 내에서 비슷한 점을 추출하는 방법
+  * 어느 한 Patch와 비슷한 (높은 Similarity를 갖는) Patch의 값을 모아서 Weighted-sum을 하면 Noise가 없어질 것이라는 내용
+  * 간단하지만 성능이 꽤 좋음
+
+#### 5. Denoising with Dictionary (18:56)
+
+* Patch 사전을 먼저 만들어두고, 요청이 들어왔을 때 비슷한 Patch를 Dictionary에서 찾아서 적용
+* Patch를 Vector화 시키면 = 비슷한 Patch의 Weighted Sum으로 표현됨
+* Dictionary와 Alpha(weight)를 이용하여 영상 생성 : Dctionary가 고정되어 있을 때 Alpha값을 찾음
+* Alpha(weight) 찾기
+  * 원래의 값과 복원한 값이 비슷해야 하되, 노이즈가 제거된 smooth한 값이다 (minimize 문제)
+  * 수많은 Dictionary 중에서 몇몇 소수의 Patch 값만 weighted sum 한다. => Alpha는 Sparse
+  * Data Fitting Term : Noisy한 관찰값과 Denoised 복원 값이 비슷해야 한다
+  * Regularization Term : L1-norm (또는 L2-norm)
+  * 순서
+    * Correlation(Similarity 등) 계산하여 비슷한 Patch를 선정하고 alpha를 구한 후, 남은 residual에 대해서 가장 비슷한 Patch를 선정하고 alpha를 구하는 방식으로 ... 반복
+    * Correlation 계산으로 비슷한 Patch를 모두 선정한 뒤, 한번에 Minimize하여 alpha 모두 계산
+
+#### 6. Dictionary Learning (13:28)
+
+* 수식은 동일하되, alpha와 dictionary를 모두 찾는 minimization으로 함
+* 순서
+  * 1 초기 Dictionary를 생성 (initialize dictionary)
+  * 2 현재 Dictionary에 대해서 Alpha 계산 (Sparse coding)
+  * 3 Dictionary와 Alpha 업데이트 (Codebook Update using K-SVD)
+    * Y(원본) - X(복원) 의 차이 = Residual을 구하고, 그 Residual을 마저 복원할 수 있는 Dictionary를 추가하고 -> 2번으로 넘어가서 해당 Alpha를 구함
+    * K-SVD: 어떤 Matrix(n x m)의 SVD를 구하면 => U (eigen values) V^T^  중에서 U를 Dictionary로, eigen \* V 를 alpha로 업데이트
+  * 2, 3 반복
+  * 4 Dictionary 학습 후, Sparse Coding을 통해 Alpha를 구한 후 복원
+
+#### 7. Super-resolution via dictionary learning (10:58)
+
+* Super-resolution : Low-resolution 영상을 High-resolution으로 변환하는 방법
+  * LR과 HR에 대한 Dictionary를 미리 학습해둠
+  * Low-resolution영상에 대해 Dictionary(Low)를 사용해서 alpha를 계산
+  * alpha를 이용해서 Dictionary(High)에 곱해서 High-resolution 영상 생성
+* Dictionary 학습에는 alpha를 공유함으로써 추후 alpha를 공유해서 사용할 수 있도록 minimization 학습
+  * High dictionary와 Low dictionary를 column-wise로 concat하여 한번에 학습
+
+#### 8. Quiz 10
+
+* 5/7~
+
+
+
 ### Medical image enhancement (3)
+
+#### 1. SRCNN (8:02)
+
+#### 2. Upsampling strategy (5:22)
+
+#### 3. Deep networks for super resolution (10:15)
+
+#### 4. Generative Adversarial Network (GAN) (14:52)
+
+#### 5. SRGAN (10:13)
+
+#### 6. CNN for medical image enhancement (7:12)
+
+#### 7. Enhancement metric (5:39)
+
+#### 8. Quiz 11
