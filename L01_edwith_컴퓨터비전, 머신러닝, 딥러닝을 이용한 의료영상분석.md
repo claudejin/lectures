@@ -1142,6 +1142,7 @@ Medical Image Analysis는 주로 3D 영상이며, Computer Vision (2D 등)과 Ma
   * alpha를 이용해서 Dictionary(High)에 곱해서 High-resolution 영상 생성
 * Dictionary 학습에는 alpha를 공유함으로써 추후 alpha를 공유해서 사용할 수 있도록 minimization 학습
   * High dictionary와 Low dictionary를 column-wise로 concat하여 한번에 학습
+  * 단순히 값의 차이로 학습하는게 아니라, Feature를 뽑아 Feature의 값차이로 학습하면 좀 더 General함
 
 #### 8. Quiz 10
 
@@ -1153,16 +1154,79 @@ Medical Image Analysis는 주로 3D 영상이며, Computer Vision (2D 등)과 Ma
 
 #### 1. SRCNN (8:02)
 
+* End-to-End CNN 구조 제안
+* Feature를 뽑고, Non-linear Mapping 하고, Reconstruction 과정에, 전통적인 방식이 아닌 Convolution Neural Network로 대체
+* 원본 영상을 1/2 또는 1/4로 줄인 다음 다시, 원본의 크기로 Bi-linear 또는 Bi-cubic으로 키운 후 Input으로 사용
+
 #### 2. Upsampling strategy (5:22)
+
+* Fast SRCNN
+  * 원본 크기로 사이즈를 키운 후 Input으로 사용하면 연산량이 쓸데없이 많아짐
+  * 사이즈가 작은 이미지를 Input으로 넣어 Convolution을 수행해서 연산량을 줄임
+  * 마지막에 Upsampling 기법을 사용해, 원본 크기로 복원함
+* Sub-Pixel CNN
+  * Padding 후, Convolution을 해서 Feature Map 추출
+  * 각 Feature Map의 값을 Sub-pixel로 생각해서 하나의 큰 Pixel을 만드는 방식
 
 #### 3. Deep networks for super resolution (10:15)
 
+* Deep CNN for SR
+  * 20 Layers로 convolution을 하여 residual을 학습하고, Low resolution 영상에 residual을 더해서 High resolution 영상을 만듬
+  * Gradient Clipping: Learning rate가 작으면 수렴 속도가 너무 느린 점을 해결하기 위한 방안. Learning rate를 크게 쓰고, Gradient가 너무 크면 learning rate에 의해 너무 들뛸 수 있으므로, gradient의 최대값을 제약함으로써 안정화
+* Laplacian Pyramid Network
+  * (Convolutions + Upsampling)을 통해 residual을 생성하고, bi-linear 또는 bi-cubic으로 upsample한 것과 더해서 영상 생성
+  * 영상의 크기와 해상도를 점차 올려가는 방식
+* Deep Learning for Image Super-resolution: A Survey (arXive, 2019)
+  * Residual learning, Recursive learning, Channel attention, Dense connections, Local multi-path learning, Scale-specific multi-path learning, Group convolution, Pyramid pooling
+
 #### 4. Generative Adversarial Network (GAN) (14:52)
+
+* Generator와 Discriminator가 번갈아 학습되면서 서로 상호작용하는 방식
+* Generator는 Fake Image를 생성하고, Discriminator는 Fake와 Real Image를 구분하는 학습을 함
+* Conditional GAN: Pix2Pix
+  * Paired Image로 학습을 시킴 (e.g., sketch to photo)
+  * Sketch를 Photo로 생성한 이미지와, 실제 Photo를 모두 넣어서 Discriminator를 학습시킴
+* Cycle GAN
+  * 화풍을 바꾸거나, 다른 종류로 바꾸는 등의 작업
+  * 스타일을 바꾸는 문제는 Y domain의 이미지처럼만 보이면 되는 것이 아닌, 반대로 적용했을 때 원본과 비슷할 정도의 Input 고려가 필요하다. 따라서, 스타일을 바꾸되 원본으로 복구 가능한 정도만 바꾸도록 학습 시킴
+  * 스타일을 변환하는 G Network와 동시에, 반대로 변환하는 F Network를 학습함. 이때 F(G(x)) = x 가 최대한 성립될 수 있도록 loss function을 구성함
 
 #### 5. SRGAN (10:13)
 
+* GAN for Super Resolution
+  * 보통 SR에서 Prediction과 HR image를 비교할 때 MSE를 사용함
+  * 비슷한 Training data에서는 average image로 blurred 영상 같은 이미지가 얻어짐
+  * 이를 해결하기 위해
+    * Perceptual Loss: VGG 또는 ResNet으로 원본과 Generation된 영상의 Feature Map을 비교
+    * GAN Loss
+
 #### 6. CNN for medical image enhancement (7:12)
+
+* Medical Image for Super-resolution
+  * MRI super-resolution
+    * 촬영에 제약이 많은 MRI를 오랜 시간 고해상도로 찍기 어려움. 시간을 줄이기 위해, Low Resolution으로 찍고 High Resolution으로 변환하는 Network 학습 (SRCNN, ResNet, DenseNet 등)
+    * 자기장의 세기에 따라 영상이 달라지는데, 이를 따로 촬영하지 않고 상호간에 변환
+  * CT reconstruction
+    * Dose를 줄여서 빠르게 찍고, 고해상도로 복원하는 기술
+* Medical Image Synthesis
+  * MRI - PET generation
+    * Structure + 신진대사 정보를 모두 얻으면 좋겠지만, PET은 촬영하기 어려움
+    * MRI와 PET 영상을 pair하여 학습함으로써, MRI 영상으로 PET 영상을 생성할 수 있도록 함 (연구중)
+  * Data generation for better training model
+    * 진짜와 같은 의료데이터를 학습에 사용해야 하는데, 의료 데이터가 제한적이기 때문에, GAN을 이용해 학습용 의료 데이터를 생산하는 방법
 
 #### 7. Enhancement metric (5:39)
 
+* PSNR (Peak Signal to Noise Ratio)
+  * Prediction 영상과 Truth 영상의 차이에 대해서, MSE를 구함
+  * MSE를 원본의 최댓값을 기준으로 정리하여 비율로 나타냄 + log
+* SSIM (Structural Similarity Index)
+  * 밝기, 대비(Contrast), 구조 정보를 비교함
+  * 평균 밝기의 차이를 보고, 표준편차의 차이를 보고, Correlation Coefficient를 구해서 구조 비교
+* MOS (Mean Opinion Score)
+  * 사람에게 Prediction을 보여주고 1~5점을 매기도록 하고, 평균을 낸 값
+  * PSNR이 높다고해서 영상의 퀄리티가 꼭 좋다고 할 순 없기 때문에, 눈으로 보기에 어떤가를 평가
+
 #### 8. Quiz 11
+
+* 7/7 100점~
